@@ -1,3 +1,82 @@
+# My fork
+I added an option of sorting by nested json properties. To access property in json objet I use symbol '->'. Example of model:
+```C#
+public partial class Row
+{
+    private readonly Dictionary<string, string> _data;
+    
+    public Row(JsonDocument data)
+    {
+        GridId = gridId;
+        _data = data.Deserialize<Dictionary<string, string>>()
+                ?? throw new Exception("Row data deserialization failed");
+    }
+
+    public Row()
+    {
+        _data = new Dictionary<string, string>();
+    }
+
+    public JsonDocument Data
+    {
+        get => JsonSerializer.SerializeToDocument(_data);
+        init => _data = value.Deserialize<Dictionary<string, string>>()
+                        ?? throw new Exception("Row data deserialization failed");
+    }
+}
+```
+Construction "Data->{Your_Key}" can be used to sort data by value obtained by Your_Key. 
+To sort data by nested json objects you need to add implementation for interface `ISieveJsonAccessor`and 
+add inheritor for `SieveProcessor` overriden property protected virtual ISieveJsonAccessor SieveJsonAccessor { get; }.
+Otherwise evrything after symbol '->' will be ignored. Here is simple example that can work with PostgresSQL jsonb:
+```C#
+public class SieveJsonAccessor : ISieveJsonAccessor
+{
+    public Expression GetJsonPropertyExpression(Expression expression, string[] nestedJsonProperties, PropertyInfo propertyInfo)
+    {
+        if (propertyInfo.PropertyType != typeof(JsonDocument))
+        {
+            throw new ArgumentException("Only JsonDocument properties are supported");
+        }
+        
+        PropertyInfo rootElementProperty = typeof(JsonDocument).GetProperty(nameof(JsonDocument.RootElement))!;
+        MethodInfo getPropertyMethod = typeof(JsonElement).GetMethod(nameof(JsonElement.GetProperty), new[] { typeof(string) })!;
+        
+        expression = Expression.Property(expression, rootElementProperty);
+
+        foreach (string propertyName in nestedJsonProperties)
+        {
+            expression = Expression.Call(expression, getPropertyMethod, Expression.Constant(propertyName));
+        }
+
+        return expression;
+    }
+}
+
+public class AppSieveProcessor : SieveProcessor
+{
+    private ISieveJsonAccessor _sieveJsonAccessor;
+
+    public AppSieveProcessor(IOptions<SieveOptions> options, ISieveJsonAccessor sieveJsonAccessor) 
+        : base(options)
+    {
+        _sieveJsonAccessor = sieveJsonAccessor;
+    }
+    
+    protected override ISieveJsonAccessor SieveJsonAccessor => _sieveJsonAccessor;
+    
+
+    protected override SievePropertyMapper MapProperties(SievePropertyMapper mapper)
+    {
+        return mapper.ApplyConfigurationsFromAssembly(typeof(AppSieveProcessor).Assembly);            
+    }
+}
+```
+
+ISeiveJsonAccessor absraction was added in case if you do not use JsonDocument from namespace System.Text.Json, but another type or library. 
+I haven't added default implementation for ISieveJsonAccessor to project, because I did not want to add extra dependencies to project.
+When you add your own implementation you have to take into account that ef core must be able to parse the resulting expression tree.
+
 # Sieve
 ⚗️ Sieve is a simple, clean, and extensible framework for .NET Core that **adds sorting, filtering, and pagination functionality out of the box**. 
 Most common use case would be for serving ASP.NET Core GET queries.
