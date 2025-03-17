@@ -1,5 +1,5 @@
-# My fork
-I added an option of sorting by nested json properties. To access property in json objet I use symbol '->'. Example of model:
+# About my fork
+I have added an option of sorting by nested json properties. To access property in json objet I use symbol `'->'`. Example of model:
 ```C#
 public partial class Row
 {
@@ -25,10 +25,10 @@ public partial class Row
     }
 }
 ```
-Construction "Data->{Your_Key}" can be used to sort data by value obtained by Your_Key. 
+Construction `Data->{Your_Key}` can be used to sort data by value obtained by `Your_Key`. 
 To sort data by nested json objects you need to add implementation for interface `ISieveJsonAccessor`and 
-add inheritor for `SieveProcessor` overriden property protected virtual ISieveJsonAccessor SieveJsonAccessor { get; }.
-Otherwise evrything after symbol '->' will be ignored. Here is simple example that can work with PostgresSQL jsonb:
+add inheritor for `SieveProcessor` with `overriden property protected virtual ISieveJsonAccessor SieveJsonAccessor { get; }`.
+Otherwise evrything after symbol `'->'` will be ignored. Here is simple example that can work with PostgresSQL jsonb:
 ```C#
 public class SieveJsonAccessor : ISieveJsonAccessor
 {
@@ -73,8 +73,8 @@ public class AppSieveProcessor : SieveProcessor
 }
 ```
 
-ISeiveJsonAccessor absraction was added in case if you do not use JsonDocument from namespace System.Text.Json, but another type or library. 
-I haven't added default implementation for ISieveJsonAccessor to project, because I did not want to add extra dependencies to project.
+`ISeiveJsonAccessor` absraction was added in case if you do not use `JsonDocument` from namespace `System.Text.Json`, but another type or library. 
+I haven't added default implementation for `ISieveJsonAccessor` to project, because I did not want to add extra dependencies to project.
 When you add your own implementation you have to take into account that ef core must be able to parse the resulting expression tree.
 
 # Sieve
