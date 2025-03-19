@@ -27,7 +27,7 @@ public partial class Row
 ```
 Construction `Data->{Your_Key}` can be used to sort data by value obtained by `Your_Key`. 
 To sort data by nested json objects you need to add implementation for interface `ISieveJsonAccessor`and 
-add inheritor for `SieveProcessor` with `overriden property protected virtual ISieveJsonAccessor SieveJsonAccessor { get; }`.
+add inheritor for `SieveProcessor` with overriden property `protected virtual ISieveJsonAccessor SieveJsonAccessor { get; }`.
 Otherwise evrything after symbol `'->'` will be ignored. Here is simple example that can work with PostgresSQL jsonb:
 ```C#
 public class SieveJsonAccessor : ISieveJsonAccessor
